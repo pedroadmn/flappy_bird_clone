@@ -19,6 +19,7 @@ public class Game extends ApplicationAdapter {
 	private Texture bottomTube;
 	private Texture topTube;
 	private Texture background;
+	private Texture gameOver;
 
 	// Config
 	private float deviceWidth;
@@ -35,12 +36,17 @@ public class Game extends ApplicationAdapter {
 
 	// Texts
 	BitmapFont scoreText;
+	BitmapFont restartText;
+	BitmapFont bestScoreText;
 
 	// Forms
 	private ShapeRenderer shapeRenderer;
 	private Circle birdCircle;
 	private Rectangle topTubeRectangle;
 	private Rectangle bottomTubeRectangle;
+
+	// Game Status
+	private int gameStatus = 0;
 
 	@Override
 	public void create () {
@@ -72,7 +78,7 @@ public class Game extends ApplicationAdapter {
 		);
 
 		if (Intersector.overlaps(birdCircle, bottomTubeRectangle) || Intersector.overlaps(birdCircle, topTubeRectangle)) {
-
+			gameStatus = 2;
 		}
 
 
@@ -107,35 +113,45 @@ public class Game extends ApplicationAdapter {
 				passTube = true;
 			}
 		}
-	}
-
-	private void verifyGameState() {
-		horizontalTubePosition -= Gdx.graphics.getDeltaTime() * 200;
-
-		if (horizontalTubePosition < -bottomTube.getWidth()) {
-			horizontalTubePosition = deviceWidth;
-			verticalTubePosition = random.nextInt(400) - 200;
-			passTube = false;
-		}
-
-		boolean touchScreen = Gdx.input.justTouched();
-
-		if (touchScreen) {
-			gravity = -15;
-		}
-
-		if (initBirtVerticalPosition > 0 || touchScreen) {
-			initBirtVerticalPosition = initBirtVerticalPosition - gravity;
-		}
-
 
 		variation += Gdx.graphics.getDeltaTime() * 10;
 
 		if (variation > 3) {
 			variation = 0;
 		}
+	}
 
-		gravity++;
+	private void verifyGameState() {
+		boolean touchScreen = Gdx.input.justTouched();
+
+		if (gameStatus == 0) {
+			if (touchScreen) {
+				gravity = -15;
+				gameStatus = 1;
+			}
+		} else if (gameStatus == 1) {
+			if (touchScreen) {
+				gravity = -15;
+			}
+
+			horizontalTubePosition -= Gdx.graphics.getDeltaTime() * 200;
+
+			if (horizontalTubePosition < -bottomTube.getWidth()) {
+				horizontalTubePosition = deviceWidth;
+				verticalTubePosition = random.nextInt(400) - 200;
+				passTube = false;
+			}
+
+
+
+			if (initBirtVerticalPosition > 0 || touchScreen) {
+				initBirtVerticalPosition = initBirtVerticalPosition - gravity;
+			}
+
+			gravity++;
+		} else if (gameStatus == 2) {
+
+		}
 	}
 
 	private void drawTextures() {
@@ -147,6 +163,12 @@ public class Game extends ApplicationAdapter {
 		batch.draw(topTube, horizontalTubePosition, (deviceHeight / 2) + spaceBetweenTubes / 2 + verticalTubePosition);
 
 		scoreText.draw(batch, String.valueOf(scores), deviceWidth / 2, deviceHeight - 100);
+
+		if (gameStatus == 2) {
+			batch.draw(gameOver, deviceWidth / 2 - gameOver.getWidth() / 2, deviceHeight /2);
+			restartText.draw(batch, "Touch on the screen to restart", deviceWidth / 2 - 200, deviceHeight / 2 - gameOver.getHeight() / 2);
+			bestScoreText.draw(batch, "Your record is: 0", deviceWidth / 2 - 150, deviceHeight / 2 - gameOver.getHeight());
+		}
 
 		batch.end();
 	}
@@ -161,6 +183,8 @@ public class Game extends ApplicationAdapter {
 
 		bottomTube = new Texture("cano_baixo_maior.png");
 		topTube = new Texture("cano_topo_maior.png");
+
+		gameOver = new Texture("game_over.png");
 	}
 
 	private void initObjects() {
@@ -171,6 +195,14 @@ public class Game extends ApplicationAdapter {
 		scoreText = new BitmapFont();
 		scoreText.setColor(Color.WHITE);
 		scoreText.getData().setScale(10);
+
+		restartText = new BitmapFont();
+		restartText.setColor(Color.GREEN);
+		restartText.getData().setScale(2);
+
+		bestScoreText = new BitmapFont();
+		bestScoreText.setColor(Color.RED);
+		bestScoreText.getData().setScale(2);
 
 		deviceWidth = Gdx.graphics.getWidth();
 		deviceHeight = Gdx.graphics.getHeight();
