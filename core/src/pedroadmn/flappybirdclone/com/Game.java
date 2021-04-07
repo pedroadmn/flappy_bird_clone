@@ -17,7 +17,9 @@ public class Game extends ApplicationAdapter {
 	private float deviceWidth;
 	private float deviceHeight;
 	private float variation = 0;
-	
+	private float gravity = 0;
+	private float initBirtVerticalPosition = 0;
+
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
@@ -31,6 +33,7 @@ public class Game extends ApplicationAdapter {
 
 		deviceWidth = Gdx.graphics.getWidth();
 		deviceHeight = Gdx.graphics.getHeight();
+		initBirtVerticalPosition = deviceHeight / 2;
 	}
 
 	@Override
@@ -41,10 +44,23 @@ public class Game extends ApplicationAdapter {
 			variation = 0;
 		}
 
+		boolean touchScreen = Gdx.input.justTouched();
+
+		if (touchScreen) {
+			gravity = -20;
+		}
+
+		if (initBirtVerticalPosition > 0 || touchScreen) {
+			initBirtVerticalPosition = initBirtVerticalPosition - gravity;
+		}
+
+
 		batch.draw(background, 0, 0, deviceWidth, deviceHeight);
-		batch.draw(birds[(int)variation], 30, deviceHeight / 2);
+		batch.draw(birds[(int)variation], 30, initBirtVerticalPosition);
 
 		variation += Gdx.graphics.getDeltaTime() * 10;
+
+		gravity++;
 		xMoviment++;
 		yMoviment++;
 		batch.end();
