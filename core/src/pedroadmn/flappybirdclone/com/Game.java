@@ -5,6 +5,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import java.util.Random;
+
 public class Game extends ApplicationAdapter {
 	private SpriteBatch batch;
 	private Texture[] birds;
@@ -19,7 +21,9 @@ public class Game extends ApplicationAdapter {
 	private float gravity = 0;
 	private float initBirtVerticalPosition = 0;
 	private float horizontalTubePosition;
+	private float verticalTubePosition;
 	private float spaceBetweenTubes;
+	private Random random;
 
 	@Override
 	public void create () {
@@ -34,6 +38,13 @@ public class Game extends ApplicationAdapter {
 	}
 
 	private void verifyGameState() {
+		horizontalTubePosition -= Gdx.graphics.getDeltaTime() * 200;
+
+		if (horizontalTubePosition < -bottomTube.getWidth()) {
+			horizontalTubePosition = deviceWidth;
+			verticalTubePosition = random.nextInt(400) - 200;
+		}
+
 		boolean touchScreen = Gdx.input.justTouched();
 
 		if (touchScreen) {
@@ -59,8 +70,8 @@ public class Game extends ApplicationAdapter {
 
 		batch.draw(background, 0, 0, deviceWidth, deviceHeight);
 		batch.draw(birds[(int)variation], 30, initBirtVerticalPosition);
-		batch.draw(bottomTube, horizontalTubePosition - 100, deviceHeight / 2 - bottomTube.getHeight() - spaceBetweenTubes / 2);
-		batch.draw(topTube, horizontalTubePosition - 100, (deviceHeight / 2) + spaceBetweenTubes / 2);
+		batch.draw(bottomTube, horizontalTubePosition, deviceHeight / 2 - bottomTube.getHeight() - spaceBetweenTubes / 2 + verticalTubePosition);
+		batch.draw(topTube, horizontalTubePosition, (deviceHeight / 2) + spaceBetweenTubes / 2 + verticalTubePosition);
 
 		batch.end();
 	}
@@ -81,6 +92,7 @@ public class Game extends ApplicationAdapter {
 
 	private void initObjects() {
 		batch = new SpriteBatch();
+		random = new Random();
 
 		deviceWidth = Gdx.graphics.getWidth();
 		deviceHeight = Gdx.graphics.getHeight();
