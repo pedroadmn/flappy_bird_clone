@@ -2,7 +2,9 @@ package pedroadmn.flappybirdclone.com;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import java.util.Random;
@@ -24,6 +26,11 @@ public class Game extends ApplicationAdapter {
 	private float verticalTubePosition;
 	private float spaceBetweenTubes;
 	private Random random;
+	private int scores = 0;
+	private boolean passTube = false;
+
+	// Texts
+	BitmapFont scoreText;
 
 	@Override
 	public void create () {
@@ -34,7 +41,17 @@ public class Game extends ApplicationAdapter {
 	@Override
 	public void render () {
 		verifyGameState();
+		validateScore();
 		drawTextures();
+	}
+
+	private void validateScore() {
+		if (horizontalTubePosition < 50 - birds[0].getWidth()) {
+			if (!passTube) {
+				scores++;
+				passTube = true;
+			}
+		}
 	}
 
 	private void verifyGameState() {
@@ -43,6 +60,7 @@ public class Game extends ApplicationAdapter {
 		if (horizontalTubePosition < -bottomTube.getWidth()) {
 			horizontalTubePosition = deviceWidth;
 			verticalTubePosition = random.nextInt(400) - 200;
+			passTube = false;
 		}
 
 		boolean touchScreen = Gdx.input.justTouched();
@@ -69,9 +87,11 @@ public class Game extends ApplicationAdapter {
 		batch.begin();
 
 		batch.draw(background, 0, 0, deviceWidth, deviceHeight);
-		batch.draw(birds[(int)variation], 30, initBirtVerticalPosition);
+		batch.draw(birds[(int)variation], 50, initBirtVerticalPosition);
 		batch.draw(bottomTube, horizontalTubePosition, deviceHeight / 2 - bottomTube.getHeight() - spaceBetweenTubes / 2 + verticalTubePosition);
 		batch.draw(topTube, horizontalTubePosition, (deviceHeight / 2) + spaceBetweenTubes / 2 + verticalTubePosition);
+
+		scoreText.draw(batch, String.valueOf(scores), deviceWidth / 2, deviceHeight - 100);
 
 		batch.end();
 	}
@@ -86,13 +106,16 @@ public class Game extends ApplicationAdapter {
 
 		bottomTube = new Texture("cano_baixo_maior.png");
 		topTube = new Texture("cano_topo_maior.png");
-
-
 	}
 
 	private void initObjects() {
 		batch = new SpriteBatch();
 		random = new Random();
+
+		// Texts
+		scoreText = new BitmapFont();
+		scoreText.setColor(Color.WHITE);
+		scoreText.getData().setScale(10);
 
 		deviceWidth = Gdx.graphics.getWidth();
 		deviceHeight = Gdx.graphics.getHeight();
