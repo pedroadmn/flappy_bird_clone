@@ -2,6 +2,8 @@ package pedroadmn.flappybirdclone.com;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -32,12 +34,19 @@ public class Game extends ApplicationAdapter {
 	private float spaceBetweenTubes;
 	private Random random;
 	private int scores = 0;
+	private int maxScore = 0;
 	private boolean passTube = false;
+	private float birdHorizontalPosition = 0;
 
 	// Texts
 	BitmapFont scoreText;
 	BitmapFont restartText;
 	BitmapFont bestScoreText;
+
+	// Sons
+	Sound flyingSound;
+	Sound colissionSound;
+	Sound scoreSound;
 
 	// Forms
 	private ShapeRenderer shapeRenderer;
@@ -47,6 +56,8 @@ public class Game extends ApplicationAdapter {
 
 	// Game Status
 	private int gameStatus = 0;
+
+	Preferences preferences;
 
 	@Override
 	public void create () {
@@ -64,7 +75,7 @@ public class Game extends ApplicationAdapter {
 
 	private void detectCollisions() {
 
-		birdCircle.set(50 + birds[0].getWidth() /2 , initBirtVerticalPosition + birds[0].getHeight() / 2, birds[0].getWidth() / 2);
+		birdCircle.set(50 + birdHorizontalPosition + birds[0].getWidth() /2 , initBirtVerticalPosition + birds[0].getHeight() / 2, birds[0].getWidth() / 2);
 
 		bottomTubeRectangle.set(horizontalTubePosition, deviceHeight / 2 - bottomTube.getHeight() - spaceBetweenTubes / 2 + verticalTubePosition,
 				bottomTube.getWidth(),
@@ -78,32 +89,11 @@ public class Game extends ApplicationAdapter {
 		);
 
 		if (Intersector.overlaps(birdCircle, bottomTubeRectangle) || Intersector.overlaps(birdCircle, topTubeRectangle)) {
-			gameStatus = 2;
+			if (gameStatus == 1) {
+				colissionSound.play();
+				gameStatus = 2;
+			}
 		}
-
-
-		 /*shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-		 shapeRenderer.circle(50 + birds[0].getWidth() /2 , initBirtVerticalPosition + birds[0].getHeight() / 2, birds[0].getWidth() / 2);
-
-		 // Top
-		 shapeRenderer.rect(
-				 horizontalTubePosition,
-				 (deviceHeight / 2) + spaceBetweenTubes / 2 + verticalTubePosition,
-				 topTube.getWidth(),
-				 topTube.getHeight()
-
-		 );
-
-		 // Bottom
-		shapeRenderer.rect(
-				horizontalTubePosition, deviceHeight / 2 - bottomTube.getHeight() - spaceBetweenTubes / 2 + verticalTubePosition,
-				bottomTube.getWidth(),
-				bottomTube.getHeight()
-		);
-
-
-		 shapeRenderer.setColor(Color.RED);
-		 shapeRenderer.end();*/
 	}
 
 	private void validateScore() {
@@ -111,6 +101,7 @@ public class Game extends ApplicationAdapter {
 			if (!passTube) {
 				scores++;
 				passTube = true;
+				scoreSound.play();
 			}
 		}
 
@@ -128,10 +119,12 @@ public class Game extends ApplicationAdapter {
 			if (touchScreen) {
 				gravity = -15;
 				gameStatus = 1;
+				flyingSound.play();
 			}
 		} else if (gameStatus == 1) {
 			if (touchScreen) {
 				gravity = -15;
+				flyingSound.play();
 			}
 
 			horizontalTubePosition -= Gdx.graphics.getDeltaTime() * 200;
@@ -142,15 +135,28 @@ public class Game extends ApplicationAdapter {
 				passTube = false;
 			}
 
-
-
 			if (initBirtVerticalPosition > 0 || touchScreen) {
 				initBirtVerticalPosition = initBirtVerticalPosition - gravity;
 			}
 
 			gravity++;
 		} else if (gameStatus == 2) {
+			birdHorizontalPosition -= Gdx.graphics.getDeltaTime() * 500;
 
+			int currentBestScore = preferences.getInteger("score");
+
+			if (currentBestScore < scores) {
+				preferences.putInteger("score", scores);
+			}
+
+			if (touchScreen) {
+				gameStatus = 0;
+				scores = 0;
+				gravity = 0;
+				birdHorizontalPosition = 0;
+				initBirtVerticalPosition = deviceHeight / 2;
+				horizontalTubePosition = deviceWidth;
+			}
 		}
 	}
 
@@ -158,16 +164,22 @@ public class Game extends ApplicationAdapter {
 		batch.begin();
 
 		batch.draw(background, 0, 0, deviceWidth, deviceHeight);
-		batch.draw(birds[(int)variation], 50, initBirtVerticalPosition);
+		batch.draw(birds[(int)variation], 50 + birdHorizontalPosition, initBirtVerticalPosition);
 		batch.draw(bottomTube, horizontalTubePosition, deviceHeight / 2 - bottomTube.getHeight() - spaceBetweenTubes / 2 + verticalTubePosition);
 		batch.draw(topTube, horizontalTubePosition, (deviceHeight / 2) + spaceBetweenTubes / 2 + verticalTubePosition);
 
 		scoreText.draw(batch, String.valueOf(scores), deviceWidth / 2, deviceHeight - 100);
 
 		if (gameStatus == 2) {
+
+			if (scores > maxScore) {
+				maxScore = scores;
+				preferences.putInteger("score", maxScore);
+			}
+
 			batch.draw(gameOver, deviceWidth / 2 - gameOver.getWidth() / 2, deviceHeight /2);
 			restartText.draw(batch, "Touch on the screen to restart", deviceWidth / 2 - 200, deviceHeight / 2 - gameOver.getHeight() / 2);
-			bestScoreText.draw(batch, "Your record is: 0", deviceWidth / 2 - 150, deviceHeight / 2 - gameOver.getHeight());
+			bestScoreText.draw(batch, "Your record is: " + maxScore, deviceWidth / 2 - 150, deviceHeight / 2 - gameOver.getHeight());
 		}
 
 		batch.end();
@@ -215,6 +227,13 @@ public class Game extends ApplicationAdapter {
 		birdCircle = new Circle();
 		topTubeRectangle = new Rectangle();
 		bottomTubeRectangle = new Rectangle();
+
+		flyingSound = Gdx.audio.newSound(Gdx.files.internal("som_asa.wav"));
+		colissionSound = Gdx.audio.newSound(Gdx.files.internal("som_batida.wav"));
+		scoreSound = Gdx.audio.newSound(Gdx.files.internal("som_pontos.wav"));
+
+		preferences = Gdx.app.getPreferences("flappyBird");
+		maxScore = preferences.getInteger("score", 0);
 	}
 	
 	@Override
