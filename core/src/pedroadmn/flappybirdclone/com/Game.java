@@ -6,11 +6,10 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Game extends ApplicationAdapter {
-
-	private int xMoviment = 0;
-	private int yMoviment = 0;
 	private SpriteBatch batch;
 	private Texture[] birds;
+	private Texture bottomTube;
+	private Texture topTube;
 	private Texture background;
 
 	// Config
@@ -19,31 +18,22 @@ public class Game extends ApplicationAdapter {
 	private float variation = 0;
 	private float gravity = 0;
 	private float initBirtVerticalPosition = 0;
+	private float horizontalTubePosition;
+	private float spaceBetweenTubes;
 
 	@Override
 	public void create () {
-		batch = new SpriteBatch();
-
-		birds = new Texture[3];
-		birds[0] = new Texture("passaro1.png");
-		birds[1] = new Texture("passaro2.png");
-		birds[2] = new Texture("passaro3.png");
-
-		background = new Texture("fundo.png");
-
-		deviceWidth = Gdx.graphics.getWidth();
-		deviceHeight = Gdx.graphics.getHeight();
-		initBirtVerticalPosition = deviceHeight / 2;
+		initTextures();
+		initObjects();
 	}
 
 	@Override
 	public void render () {
-		batch.begin();
+		verifyGameState();
+		drawTextures();
+	}
 
-		if (variation > 3) {
-			variation = 0;
-		}
-
+	private void verifyGameState() {
 		boolean touchScreen = Gdx.input.justTouched();
 
 		if (touchScreen) {
@@ -55,15 +45,49 @@ public class Game extends ApplicationAdapter {
 		}
 
 
-		batch.draw(background, 0, 0, deviceWidth, deviceHeight);
-		batch.draw(birds[(int)variation], 30, initBirtVerticalPosition);
-
 		variation += Gdx.graphics.getDeltaTime() * 10;
 
+		if (variation > 3) {
+			variation = 0;
+		}
+
 		gravity++;
-		xMoviment++;
-		yMoviment++;
+	}
+
+	private void drawTextures() {
+		batch.begin();
+
+		batch.draw(background, 0, 0, deviceWidth, deviceHeight);
+		batch.draw(birds[(int)variation], 30, initBirtVerticalPosition);
+		batch.draw(bottomTube, horizontalTubePosition - 100, deviceHeight / 2 - bottomTube.getHeight() - spaceBetweenTubes / 2);
+		batch.draw(topTube, horizontalTubePosition - 100, (deviceHeight / 2) + spaceBetweenTubes / 2);
+
 		batch.end();
+	}
+
+	private void initTextures() {
+		birds = new Texture[3];
+		birds[0] = new Texture("passaro1.png");
+		birds[1] = new Texture("passaro2.png");
+		birds[2] = new Texture("passaro3.png");
+
+		background = new Texture("fundo.png");
+
+		bottomTube = new Texture("cano_baixo_maior.png");
+		topTube = new Texture("cano_topo_maior.png");
+
+
+	}
+
+	private void initObjects() {
+		batch = new SpriteBatch();
+
+		deviceWidth = Gdx.graphics.getWidth();
+		deviceHeight = Gdx.graphics.getHeight();
+		initBirtVerticalPosition = deviceHeight / 2;
+
+		horizontalTubePosition = deviceWidth;
+		spaceBetweenTubes = 400;
 	}
 	
 	@Override
