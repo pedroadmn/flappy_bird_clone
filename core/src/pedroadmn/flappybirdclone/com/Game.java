@@ -6,6 +6,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Rectangle;
 
 import java.util.Random;
 
@@ -32,6 +36,12 @@ public class Game extends ApplicationAdapter {
 	// Texts
 	BitmapFont scoreText;
 
+	// Forms
+	private ShapeRenderer shapeRenderer;
+	private Circle birdCircle;
+	private Rectangle topTubeRectangle;
+	private Rectangle bottomTubeRectangle;
+
 	@Override
 	public void create () {
 		initTextures();
@@ -43,10 +53,55 @@ public class Game extends ApplicationAdapter {
 		verifyGameState();
 		validateScore();
 		drawTextures();
+		detectCollisions();
+	}
+
+	private void detectCollisions() {
+
+		birdCircle.set(50 + birds[0].getWidth() /2 , initBirtVerticalPosition + birds[0].getHeight() / 2, birds[0].getWidth() / 2);
+
+		bottomTubeRectangle.set(horizontalTubePosition, deviceHeight / 2 - bottomTube.getHeight() - spaceBetweenTubes / 2 + verticalTubePosition,
+				bottomTube.getWidth(),
+				bottomTube.getHeight());
+
+		topTubeRectangle.set(
+				horizontalTubePosition,
+				(deviceHeight / 2) + spaceBetweenTubes / 2 + verticalTubePosition,
+				topTube.getWidth(),
+				topTube.getHeight()
+		);
+
+		if (Intersector.overlaps(birdCircle, bottomTubeRectangle) || Intersector.overlaps(birdCircle, topTubeRectangle)) {
+
+		}
+
+
+		 /*shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+		 shapeRenderer.circle(50 + birds[0].getWidth() /2 , initBirtVerticalPosition + birds[0].getHeight() / 2, birds[0].getWidth() / 2);
+
+		 // Top
+		 shapeRenderer.rect(
+				 horizontalTubePosition,
+				 (deviceHeight / 2) + spaceBetweenTubes / 2 + verticalTubePosition,
+				 topTube.getWidth(),
+				 topTube.getHeight()
+
+		 );
+
+		 // Bottom
+		shapeRenderer.rect(
+				horizontalTubePosition, deviceHeight / 2 - bottomTube.getHeight() - spaceBetweenTubes / 2 + verticalTubePosition,
+				bottomTube.getWidth(),
+				bottomTube.getHeight()
+		);
+
+
+		 shapeRenderer.setColor(Color.RED);
+		 shapeRenderer.end();*/
 	}
 
 	private void validateScore() {
-		if (horizontalTubePosition < 50 - birds[0].getWidth()) {
+		if (horizontalTubePosition < 50 - birds[0].getWidth() ) {
 			if (!passTube) {
 				scores++;
 				passTube = true;
@@ -66,7 +121,7 @@ public class Game extends ApplicationAdapter {
 		boolean touchScreen = Gdx.input.justTouched();
 
 		if (touchScreen) {
-			gravity = -20;
+			gravity = -15;
 		}
 
 		if (initBirtVerticalPosition > 0 || touchScreen) {
@@ -122,7 +177,12 @@ public class Game extends ApplicationAdapter {
 		initBirtVerticalPosition = deviceHeight / 2;
 
 		horizontalTubePosition = deviceWidth;
-		spaceBetweenTubes = 400;
+		spaceBetweenTubes = 300;
+
+		shapeRenderer = new ShapeRenderer();
+		birdCircle = new Circle();
+		topTubeRectangle = new Rectangle();
+		bottomTubeRectangle = new Rectangle();
 	}
 	
 	@Override
