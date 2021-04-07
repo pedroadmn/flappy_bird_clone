@@ -5,6 +5,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -12,6 +14,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.Random;
 
@@ -59,6 +63,12 @@ public class Game extends ApplicationAdapter {
 
 	Preferences preferences;
 
+	// Camera
+	private OrthographicCamera camera;
+	private Viewport viewport;
+	private final float VIRTUAL_WIDTH = 720;
+	private final float VIRTUAL_HEIGHT = 1280;
+
 	@Override
 	public void create () {
 		initTextures();
@@ -67,6 +77,8 @@ public class Game extends ApplicationAdapter {
 
 	@Override
 	public void render () {
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+
 		verifyGameState();
 		validateScore();
 		drawTextures();
@@ -161,6 +173,8 @@ public class Game extends ApplicationAdapter {
 	}
 
 	private void drawTextures() {
+		batch.setProjectionMatrix(camera.combined);
+
 		batch.begin();
 
 		batch.draw(background, 0, 0, deviceWidth, deviceHeight);
@@ -216,8 +230,8 @@ public class Game extends ApplicationAdapter {
 		bestScoreText.setColor(Color.RED);
 		bestScoreText.getData().setScale(2);
 
-		deviceWidth = Gdx.graphics.getWidth();
-		deviceHeight = Gdx.graphics.getHeight();
+		deviceWidth = VIRTUAL_WIDTH;
+		deviceHeight = VIRTUAL_HEIGHT;
 		initBirtVerticalPosition = deviceHeight / 2;
 
 		horizontalTubePosition = deviceWidth;
@@ -234,8 +248,17 @@ public class Game extends ApplicationAdapter {
 
 		preferences = Gdx.app.getPreferences("flappyBird");
 		maxScore = preferences.getInteger("score", 0);
+
+		camera = new OrthographicCamera();
+		camera.position.set(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2, 0);
+		viewport = new StretchViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera);
 	}
-	
+
+	@Override
+	public void resize(int width, int height) {
+		viewport.update(width, height);
+	}
+
 	@Override
 	public void dispose () {
 	}
